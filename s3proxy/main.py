@@ -1,12 +1,15 @@
-import argparse
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 
-def cli():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("name", help="your name")
-    args = parser.parse_args()
-    print("Hello, {}!".format(args.name))
+async def homepage(request):
+    return JSONResponse({"hello": "world"})
 
 
-if __name__ == "__main__":
-    cli()
+app = Starlette(
+    debug=True,
+    routes=[
+        Route("/", homepage),
+    ],
+)
