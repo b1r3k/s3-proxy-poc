@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from app_name import main
+from s3proxy import main
 
 
 class TestCommandLineInterface(TestCase):

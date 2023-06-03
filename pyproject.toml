@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "app-name"
+name = "s3proxy"
 version = "0.1.0"
 description = ""
 authors = ["Lukasz Jachym <lukasz.jachym@gmail.com>"]
 readme = "README.md"
-packages = [{include = "app_name"}]
+packages = [{include = "s3proxy"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -22,7 +22,7 @@ mypy = "^1.0.1"
 isort = "^5.12.0"
 
 [tool.poetry.scripts]
-app-cli = 'app_name:main.cli'
+app-cli = 's3proxy:main.cli'
 
 [tool.pytest.ini_options]
 minversion = "7.0"
@@ -41,4 +41,4 @@ warn_unused_configs = true
 
 [tool.isort]
 profile = "black"
-src_paths = ["app_name", "tests"]
+src_paths = ["s3proxy", "tests"]

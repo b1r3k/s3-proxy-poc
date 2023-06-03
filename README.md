@@ -15,10 +15,10 @@ Included in this boilerplate:
 ## How to start
 
 1. Make sure you have python required interpreter installed in pyenv e.g.
-2. Rename app folder to your app name if needed (`mv app_name new_app_name`) and then:
+2. Rename app folder to your app name if needed (`mv s3proxy new_s3proxy`) and then:
 
-       find ./ -type f -not -path "./.git/*" -exec sed -i 's/app_name/new_app_name/g' {} \;
-       find ./ -type f -not -path "./.git/*" -exec sed -i 's/app-name/new-app-name/g' {} \;
+       find ./ -type f -not -path "./.git/*" -exec sed -i 's/s3proxy/new_s3proxy/g' {} \;
+       find ./ -type f -not -path "./.git/*" -exec sed -i 's/s3proxy/new-s3proxy/g' {} \;
 
 3. `make install`
 4. `make test`

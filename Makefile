@@ -1,5 +1,5 @@
 APP_VERSION := $(shell grep -oP '(?<=^version = ")[^"]*' pyproject.toml)
-APP_DIR := "app_name"
+APP_DIR := "s3proxy"
 NPROCS = $(shell grep -c 'processor' /proc/cpuinfo)
 MAKEFLAGS += -j$(NPROCS)
 PYTEST_FLAGS := --failed-first -x
