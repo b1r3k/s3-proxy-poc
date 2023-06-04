@@ -6,7 +6,7 @@ from starlette.routing import Route
 
 async def handle(request):
     # Extract the target URL from the request
-    target_url = httpx.URL("https://www.onet.pl")
+    target_url = httpx.URL("https://s3.us-east-1.amazonaws.com")
 
     # Create a new request to the target server
     headers = {k: v for k, v in request.headers.items()}
@@ -16,7 +16,7 @@ async def handle(request):
     # Perform the request to the target server
     async with httpx.AsyncClient() as client:
         # print(proxy_request)
-        # print(proxy_request.headers)
+        print(proxy_request.headers)
         response = await client.send(proxy_request)
         # print(response)
         # Create a streaming response to send back to the client
