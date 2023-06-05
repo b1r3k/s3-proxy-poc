@@ -1,26 +1,11 @@
-# Modern python app boilerplate
+# S3 proxy
 
-Included in this boilerplate:
-
- - pyenv for python version management
- - [poetry](https://python-poetry.org/) for dependency management
- - [pre-commit](https://pre-commit.com/) for linting and formatting
- - [pytest](https://docs.pytest.org/en/stable/) for testing
- - [black]() for formatting
- - [flake8]() for linting
- - [isort]() for sorting imports
- - [mypy]() for static type checking
+This is proof of concept.
+The idea is to setup HTTP proxy between S3 client (e.g. boto)  and S3 compatible server and perform protocol specific modifications on the fly, for example custom authorization. It's different approach than in https://github.com/jcomo/s3-proxy and https://github.com/pottava/aws-s3-proxy because it's capable of handling all requests made by the client without using AWS SDK - it aims to be transparent for the S3 client.
 
 
 ## How to start
 
-1. Make sure you have python required interpreter installed in pyenv e.g.
-2. Rename app folder to your app name if needed (`mv s3proxy new_s3proxy`) and then:
-
-       find ./ -type f -not -path "./.git/*" -exec sed -i 's/s3proxy/new_s3proxy/g' {} \;
-       find ./ -type f -not -path "./.git/*" -exec sed -i 's/s3proxy/new-s3proxy/g' {} \;
-
-3. `make install`
-4. `make test`
-5. Make sure it's working: `poetry run app-cli "Developer"`
-6. Optionally, squeeze history into one commit: `git reset $(git commit-tree HEAD^{tree} -m "Initial commit")`
+1. `make install`
+2. `make run-proxy` in order to start proxy server
+5. `make run-client` in order to start boto-based client and perform some operations

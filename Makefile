@@ -24,3 +24,9 @@ lint-check:
 	poetry run mypy .
 
 lint: lint-fix lint-check
+
+run-proxy:
+	poetry run dotenv uvicorn --reload --factory s3proxy:main.app_factory
+
+run-boto-client:
+	poetry run dotenv boto-client
