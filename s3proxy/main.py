@@ -156,17 +156,16 @@ def get_signed_headers(headers):
     return signed_headers
 
 
-def get_proxied_request(client, incoming_req):
+async def get_proxied_response(client, incoming_req):
     # Extract the target URL from the request
-    target_url = httpx.URL("https://s3.us-east-1.amazonaws.com")
-
-    print("Forwarding to: " + target_url.host + incoming_req.url.path)
+    target_host = "s3.us-east-1.amazonaws.com"
+    target_url = incoming_req.url.replace(hostname=target_host, scheme="https", port=443)
+    print("Forwarding to: " + str(target_url))
     # Create a new request to the target server
     headers = {k: v for k, v in incoming_req.headers.items()}
-    endpoint = target_url.host
+    endpoint = target_url.hostname
     headers["host"] = endpoint
     signed_headers_names = get_signed_headers(headers)
-    # print("signed headers names: ", signed_headers_names)
     signed_headers = {k: v for k, v in headers.items() if k.lower() in signed_headers_names}
     new_signature = get_v4_signature(
         settings.AWS_ACCESS_KEY_ID,
@@ -177,13 +176,26 @@ def get_proxied_request(client, incoming_req):
         incoming_req.method,
         incoming_req.url.path,
         signed_headers,
+        body_hash=headers.get("x-amz-content-sha256"),
     )
 
     headers["authorization"] = new_signature
-    proxy_request = client.build_request(incoming_req.method, target_url, headers=headers)
-    # content=incoming_req.stream())
+    if int(headers.get("content-length", 0)) > 0:
+        # body = b''
+        # async for chunk in incoming_req.stream():
+        #     body += chunk
+        # print('Body SHA256: %s' % hashlib.sha256(body).hexdigest())
+        proxy_request = client.build_request(
+            incoming_req.method, str(target_url), headers=headers, data=incoming_req.stream()
+        )
+        response = await client.send(proxy_request)
+    else:
+        proxy_request = client.build_request(incoming_req.method, str(target_url), headers=headers)
+        response = await client.send(proxy_request)
+    # print('Proxy request: %s' % str(proxy_request))
+    # print('Proxy request headers: %s' % str(proxy_request.headers.raw))
     # proxy_request = httpx.Request(method=incoming_req.method, url=target_url, headers=signed_headers)
-    return proxy_request
+    return response
 
 
 async def handle(request):
@@ -191,19 +203,17 @@ async def handle(request):
 
     # Perform the request to the target server
     async with httpx.AsyncClient(follow_redirects=True) as client:
-        proxy_request = get_proxied_request(client, request)
-        # print(proxy_request.headers.raw)
-        response = await client.send(proxy_request)
-        # print(response)
+        response = await get_proxied_response(client, request)
         # Create a streaming response to send back to the client
         proxy_response = StreamingResponse(response.aiter_bytes(), status_code=response.status_code)
-        # for key, value in response.headers.items():
-        #     proxy_response.headers[key] = value
-        # print(proxy_response.headers)
 
         return proxy_response
 
 
 def app_factory():
-    app = Starlette(debug=settings.DEBUG, routes=[Route("/", handle), Route("/{path:path}", handle)])
+    allowed_methods = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"]
+    app = Starlette(
+        debug=settings.DEBUG,
+        routes=[Route("/", handle, methods=allowed_methods), Route("/{path:path}", handle, methods=allowed_methods)],
+    )
     return app

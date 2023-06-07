@@ -27,7 +27,7 @@ def cli():
     parser = argparse.ArgumentParser(description="Backblaze B2 CLI")
     parser.add_argument("--key-id", help="Application Key ID", default=settings.B2_APP_KEY_ID)
     parser.add_argument("--key", help="Application Key", default=settings.B2_APP_KEY)
-    parser.add_argument("--bucket", help="Bucket Name")
+    parser.add_argument("--bucket", help="Bucket Name", default=None)
     parser.add_argument("--file", help="File to upload")
     args = parser.parse_args()
     if args.key_id is None or args.key is None:
@@ -40,5 +40,7 @@ def cli():
     print("Existing buckets:")
     for bucket in response["Buckets"]:
         print(f'  {bucket["Name"]}')
-    # with open(args.file, 'rb') as f:
-    #     s3_target.Bucket(args.bucket).put_object(Key=args.file, Body=f.read())
+    if args.bucket:
+        print(f"Uploading {args.file} to {args.bucket}")
+        with open(args.file, "rb") as fd:
+            s3.upload_fileobj(fd, args.bucket, args.file)
