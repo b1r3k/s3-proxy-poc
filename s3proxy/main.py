@@ -150,9 +150,9 @@ def get_signed_headers(headers):
     auth_parts = headers["authorization"].split(",")
     # print("auth_parts: ", auth_parts)
     signed_headers = auth_parts[1].split("=")[1]
-    # print("signed_headers: ", signed_headers)
+    # host;x-amz-content-sha256;x-amz-date
     signed_headers = [header_name for header_name in signed_headers.split(";")]
-    # print("signed_headers: ", signed_headers)
+    # [host, x-amz-content-sha256, x-amz-date]
     return signed_headers
 
 
