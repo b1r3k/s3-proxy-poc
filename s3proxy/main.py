@@ -160,7 +160,7 @@ async def get_proxied_response(client, incoming_req):
     # Extract the target URL from the request
     target_host = "s3.us-east-1.amazonaws.com"
     target_url = incoming_req.url.replace(hostname=target_host, scheme="https", port=443)
-    print("Forwarding to: " + str(target_url))
+    logger.debug("Forwarding to: " + str(target_url))
     # Create a new request to the target server
     headers = {k: v for k, v in incoming_req.headers.items()}
     endpoint = target_url.hostname
@@ -180,18 +180,14 @@ async def get_proxied_response(client, incoming_req):
     )
 
     headers["authorization"] = new_signature
-    if int(headers.get("content-length", 0)) > 0:
-        # body = b''
-        # async for chunk in incoming_req.stream():
-        #     body += chunk
-        # print('Body SHA256: %s' % hashlib.sha256(body).hexdigest())
-        proxy_request = client.build_request(
-            incoming_req.method, str(target_url), headers=headers, data=incoming_req.stream()
-        )
-        response = await client.send(proxy_request)
-    else:
-        proxy_request = client.build_request(incoming_req.method, str(target_url), headers=headers)
-        response = await client.send(proxy_request)
+    has_content = int(headers.get("content-length", 0)) > 0
+    data = incoming_req.stream() if has_content else None
+    # body = b''
+    # async for chunk in incoming_req.stream():
+    #     body += chunk
+    # print('Body SHA256: %s' % hashlib.sha256(body).hexdigest())
+    proxy_request = client.build_request(incoming_req.method, str(target_url), headers=headers, data=data)
+    response = await client.send(proxy_request)
     # print('Proxy request: %s' % str(proxy_request))
     # print('Proxy request headers: %s' % str(proxy_request.headers.raw))
     # proxy_request = httpx.Request(method=incoming_req.method, url=target_url, headers=signed_headers)
