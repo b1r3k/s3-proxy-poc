@@ -1,0 +1,77 @@
+version: '3.4'
+
+services:
+  # This starts a Zenko CloudServer on port 8000. The default access key is accessKey1 with a secret key of verySecretKey1.
+  # storage runs in memory
+  cloudserver-front:
+    container_name: cloudserver-front
+    image: zenko/cloudserver
+    command:
+      - yarn
+      - run
+      - mem_backend
+    ports:
+      - 8000:8000
+    environment:
+      - S3BACKEND=mem
+    # they seem to provide healthcheck endpoint on port 8002 by default but it's another service:
+    #  yarn run start_metrics_server
+#    healthcheck:
+#      test: "curl --silent --head --fail http://localhost:8000 > /dev/null || exit 1"
+#      interval: 10s
+#      retries: 3
+#      start_period: 5s
+#      timeout: 1s
+  s3proxy:
+    container_name: s3proxy
+    build:
+      dockerfile: Dockerfile.tests
+    command:
+      - /app/.venv/bin/uvicorn
+      - --host
+      - 0.0.0.0
+      - --no-use-colors
+      - --factory
+      - s3proxy:main.app_factory
+    depends_on:
+      cloudserver-front:
+        condition: service_started
+    ports:
+      - "5000:5000"
+    environment:
+      - UVICORN_PORT=5000
+      - UVICORN_LOG_LEVEL=debug
+      - LOG_LEVEL=DEBUG
+      - AWS_S3_ENDPOINT_URL=http://cloudserver-front:8000
+      - AWS_ACCESS_KEY_ID=accessKey1
+      - AWS_SECRET_ACCESS_KEY=verySecretKey1
+    healthcheck:
+      test: "curl --silent --fail http://localhost:5000/healthcheck > /dev/null || exit 1"
+      interval: 10s
+      retries: 3
+      start_period: 5s
+      timeout: 1s
+
+  proxy-e2e-tests:
+    profiles:
+      - e2e-tests
+    build:
+      dockerfile: Dockerfile.tests
+    command:
+      - poetry
+      - run
+      - pytest
+      - -o
+      - log_cli=true
+      - -x
+      - ./tests/e2e
+    depends_on:
+      cloudserver-front:
+        condition: service_started
+      s3proxy:
+        condition: service_healthy
+    environment:
+      - LOG_LEVEL=INFO
+      - S3PROXY_ENDPOINT_URL=http://s3proxy:5000
+      - AWS_ACCESS_KEY_ID=accessKey1
+      - AWS_SECRET_ACCESS_KEY=verySecretKey1

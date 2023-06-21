@@ -6,10 +6,22 @@ PYTEST_FLAGS := --failed-first -x
 
 
 install:
-	poetry install
+	poetry install --with dev
 	test -d .git/hooks/pre-commit || poetry run pre-commit install
 
-test:
+e2e-test:
+	poetry export --with dev --without-hashes --format=requirements.txt > requirements.txt
+	docker compose build proxy-e2e-tests s3proxy
+	docker compose run --rm proxy-e2e-tests
+
+e2e-testloop:
+	for number in ``seq 1 1000``; do \
+	    docker compose build proxy-e2e-tests; \
+        docker compose run --rm proxy-e2e-tests || (echo "e2e test failed with $$?"; exit 1); \
+        docker compose down --remove-orphans ; \
+    done
+
+unit-test:
 	poetry run pytest ${PYTEST_FLAGS}
 
 testloop:

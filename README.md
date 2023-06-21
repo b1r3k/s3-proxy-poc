@@ -8,4 +8,9 @@ The idea is to setup HTTP proxy between S3 client (e.g. boto)  and S3 compatible
 
 1. `make install`
 2. `make run-proxy` in order to start proxy server
-5. `make run-client` in order to start boto-based client and perform some operations
+
+## Running e2e tests
+
+It uses docker compose to launch s3proxy and [zenko/cloudserver - Docker Image | Docker Hub](https://hub.docker.com/r/zenko/cloudserver) as s3 server and then runs `./tests/e2e` against them.
+
+    $ make e2e-test

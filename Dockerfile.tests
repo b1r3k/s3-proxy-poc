@@ -1,0 +1,19 @@
+FROM python:3.11-slim
+
+ARG USER=unprivileged
+ARG GROUP=unprivileged
+ENV PYTHONUNBUFFERED 1
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY requirements.txt /requirements.txt
+
+RUN apt-get -qq update && \
+    apt-get -qq install --no-install-recommends apt-transport-https ca-certificates locales git curl && \
+    update-ca-certificates --fresh && \
+    apt-get -qq upgrade --no-install-recommends && \
+    pip install --upgrade pip poetry
+
+WORKDIR /app
+RUN python -m venv /app/.venv && . /app/.venv/bin/activate && pip install --no-cache-dir -r /requirements.txt
+COPY . /app
+#RUN poetry install --with dev --no-interaction --no-ansi
