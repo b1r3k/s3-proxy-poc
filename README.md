@@ -7,7 +7,15 @@ The idea is to setup HTTP proxy between S3 client (e.g. boto)  and S3 compatible
 ## How to start
 
 1. `make install`
-2. `make run-proxy` in order to start proxy server
+2. `make run-proxy` in order to start proxy server. Define environment variables in `.env` file.
+
+## How to build production ready docker image
+
+    $ make build-docker-image
+
+In order to publish image to the ECR put ECR_REPO_URI variable pointing to ECR in `.env.build` and run:
+
+    $ poetry run dotenv -e .env.build make publish-docker-image
 
 ## Running e2e tests
 

@@ -1,5 +1,5 @@
 APP_VERSION := $(shell grep -oP '(?<=^version = ")[^"]*' pyproject.toml)
-APP_DIR := "s3proxy"
+APP_DIR := s3proxy
 NPROCS = $(shell grep -c 'processor' /proc/cpuinfo)
 MAKEFLAGS += -j$(NPROCS)
 PYTEST_FLAGS := --failed-first -x
@@ -40,5 +40,11 @@ lint: lint-fix lint-check
 run-proxy:
 	poetry run dotenv uvicorn --reload --factory s3proxy:main.app_factory
 
-run-boto-client:
-	poetry run dotenv boto-client
+authorize-ecr:
+	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(ECR_REPO_URI)
+
+build-docker-image:
+	docker build -f Dockerfile -t $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION) .
+
+publish-docker-image: build-docker-image authorize-ecr
+	docker push $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION)
