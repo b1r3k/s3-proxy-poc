@@ -9,6 +9,7 @@ class GlobalSettings(BaseSettings):
     LOG_LEVEL: str = environ.get("LOG_LEVEL", "INFO")
     AWS_ACCESS_KEY_ID: str = environ.get("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY: str = environ.get("AWS_SECRET_ACCESS_KEY")
+    AWS_S3_ENDPOINT_URL: str = environ.get("AWS_S3_ENDPOINT_URL")
     B2_APP_KEY_ID: str = environ.get("B2_APP_KEY_ID")
     B2_APP_KEY: str = environ.get("B2_APP_KEY")
 
