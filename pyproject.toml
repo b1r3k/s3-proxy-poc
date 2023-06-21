@@ -27,9 +27,6 @@ mypy = "^1.0.1"
 isort = "^5.12.0"
 boto3 = "^1.26.146"
 
-[tool.poetry.scripts]
-boto-client = 's3proxy:client.cli'
-
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q"
