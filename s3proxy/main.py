@@ -1,4 +1,3 @@
-import logging
 import time
 
 import httpx
@@ -7,11 +6,14 @@ from starlette.datastructures import URL
 from starlette.responses import Response, StreamingResponse
 from starlette.routing import Route
 
+from .aws import AwsAccessProvider
 from .awssigv4 import get_v4_signature
 from .config import settings
+from .http_client import AsyncHttpClient
+from .logging import root_logger
 
-logger = logging.getLogger()
-logger.setLevel(level=logging.getLevelName(settings.LOG_LEVEL))
+http_client = None
+aws_access_provider: AwsAccessProvider | None = None
 
 
 def get_signed_headers(headers):
@@ -36,12 +38,12 @@ def get_signed_headers(headers):
         return []
 
 
-async def get_proxied_response(client, incoming_req):
+async def get_proxied_response(aws_provider: AwsAccessProvider, client, incoming_req):
     # Extract the target URL from the request
     # target_host = "s3.us-east-1.amazonaws.com"
     target_url = URL(settings.AWS_S3_ENDPOINT_URL)
     target_url = incoming_req.url.replace(hostname=target_url.hostname, scheme=target_url.scheme, port=target_url.port)
-    logger.debug("Forwarding to: " + str(target_url))
+    root_logger.debug("Forwarding to: " + str(target_url))
     # Create a new request to the target server
     headers = {k: v for k, v in incoming_req.headers.items()}
     endpoint = target_url.hostname
@@ -49,9 +51,10 @@ async def get_proxied_response(client, incoming_req):
     signed_headers_names = get_signed_headers(headers)
     if len(signed_headers_names):
         signed_headers = {k: v for k, v in headers.items() if k.lower() in signed_headers_names}
+        access_key, secret_key = await aws_provider.get_access_secret_key()
         new_signature = get_v4_signature(
-            settings.AWS_ACCESS_KEY_ID,
-            settings.AWS_SECRET_ACCESS_KEY,
+            access_key,
+            secret_key,
             endpoint,
             "us-east-1",
             "s3",
@@ -80,9 +83,11 @@ async def get_proxied_response(client, incoming_req):
 
 
 async def handle(request):
+    global aws_access_provider
+
     # Perform the request to the target server
     async with httpx.AsyncClient(follow_redirects=True) as client:
-        response = await get_proxied_response(client, request)
+        response = await get_proxied_response(aws_access_provider, client, request)
         # Create a streaming response to send back to the client
         proxy_response = StreamingResponse(
             response.aiter_bytes(), status_code=response.status_code, headers=response.headers
@@ -94,8 +99,30 @@ async def healthcheck(request):
     return Response(f"OK {time.time()}", status_code=200)
 
 
+async def app_startup():
+    global http_client
+    global aws_access_provider
+
+    root_logger.info("Starting up..")
+    http_client = AsyncHttpClient()
+    aws_access_provider = AwsAccessProvider(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+
+
+async def app_shutdown():
+    global http_client
+    global aws_access_provider
+
+    root_logger.info("Shutting down..")
+
+    if http_client:
+        await http_client.close_session()
+    if aws_access_provider:
+        await aws_access_provider.close()
+
+
 def app_factory():
     allowed_methods = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"]
+
     app = Starlette(
         debug=settings.DEBUG,
         routes=[
@@ -103,5 +130,7 @@ def app_factory():
             Route("/healthcheck", healthcheck, methods=["GET"]),
             Route("/{path:path}", handle, methods=allowed_methods),
         ],
+        on_startup=[app_startup],
+        on_shutdown=[app_shutdown],
     )
     return app

@@ -16,4 +16,4 @@ RUN apt-get -qq update && \
 WORKDIR /app
 RUN python -m venv /app/.venv && . /app/.venv/bin/activate && pip install --no-cache-dir -r /requirements.txt
 COPY . /app
-#RUN poetry install --with dev --no-interaction --no-ansi
+RUN poetry install --with dev --no-interaction --no-ansi
