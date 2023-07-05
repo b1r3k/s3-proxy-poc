@@ -38,7 +38,7 @@ lint-check:
 lint: lint-fix lint-check
 
 run-proxy:
-	poetry run dotenv uvicorn --reload --factory s3proxy:main.app_factory
+	poetry run uvicorn --reload --factory s3proxy:main.app_factory
 
 authorize-ecr:
 	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(ECR_REPO_URI)

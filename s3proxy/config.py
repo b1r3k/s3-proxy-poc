@@ -1,20 +1,66 @@
-from os import environ
+import __main__
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from pydantic import BaseSettings
+print(__main__.__package__)
 
 
 class GlobalSettings(BaseSettings):
-    ENVIRONMENT: str = "local"
-    DEBUG: bool = environ.get("DEBUG", False)
-    LOG_LEVEL: str = environ.get("LOG_LEVEL", "INFO")
-    AWS_ACCESS_KEY_ID: str = environ.get("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY: str = environ.get("AWS_SECRET_ACCESS_KEY")
-    AWS_S3_ENDPOINT_URL: str = environ.get("AWS_S3_ENDPOINT_URL")
-    B2_APP_KEY_ID: str = environ.get("B2_APP_KEY_ID")
-    B2_APP_KEY: str = environ.get("B2_APP_KEY")
+    model_config = SettingsConfigDict(
+        # `.env.prod` takes priority over `.env`
+        env_file=(".env", ".env.prod"),
+        extra="ignore",
+    )
 
-    def is_local(self) -> bool:
-        return self.ENVIRONMENT in ["local", "test"]
+    APP_NAME: str = str(__main__.__package__)
+    DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_S3_ENDPOINT_URL: str | None = None
+    B2_APP_KEY_ID: str | None = None
+    B2_APP_KEY: str | None = None
 
 
 settings = GlobalSettings()
+
+
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s %(levelname)s [%(name)s:%(lineno)d] %(message)s",
+            "datefmt": "%d-%m-%Y %I:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": settings.LOG_LEVEL,
+            "formatter": "standard",
+            "stream": "ext://sys.stdout",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["console"],
+            "level": settings.LOG_LEVEL,
+            "propagate": True,
+        },
+        "app": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "gunicorn.access": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "uvicorn.access": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
