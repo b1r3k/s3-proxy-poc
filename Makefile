@@ -44,7 +44,7 @@ authorize-ecr:
 	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(ECR_REPO_URI)
 
 build-docker-image:
-	docker build -f Dockerfile -t $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION) .
+	docker build -f Dockerfile -t $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION) -t $(ECR_REPO_URI)/$(APP_DIR):latest .
 
 publish-docker-image: build-docker-image authorize-ecr
 	docker push $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION)

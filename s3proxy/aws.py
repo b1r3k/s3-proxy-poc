@@ -66,7 +66,8 @@ class AwsAccessProvider:
 
     async def refresh_access_key(self):
         loop = asyncio.get_event_loop()
-        access_key, access_secret, session_token, expiration = get_credentials_for_role(self.get_role_arn)
+        role_arn = await self.get_role_arn()
+        access_key, access_secret, session_token, expiration = get_credentials_for_role(role_arn)
         if self._invalidation_callback is not None:
             self._invalidation_callback.cancel()
         self._invalidation_callback = loop.call_at(expiration.timestamp(), self.invalidate_access_key)

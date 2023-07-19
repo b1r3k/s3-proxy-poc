@@ -15,7 +15,7 @@ The idea is to setup HTTP proxy between S3 client (e.g. boto)  and S3 compatible
 
 In order to publish image to the ECR put ECR_REPO_URI variable pointing to ECR in `.env.build` and run:
 
-    $ poetry run dotenv -e .env.build make publish-docker-image
+    $ poetry run dotenv -f .env.build run make publish-docker-image
 
 ## Running e2e tests
 
