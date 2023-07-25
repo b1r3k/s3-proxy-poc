@@ -1,6 +1,8 @@
 import __main__
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .version import __version__
+
 print(__main__.__package__)
 
 
@@ -12,6 +14,7 @@ class GlobalSettings(BaseSettings):
     )
 
     APP_NAME: str = str(__main__.__package__)
+    APP_VERSION: str = __version__
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
     AWS_ACCESS_KEY_ID: str | None = None

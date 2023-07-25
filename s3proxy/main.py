@@ -103,7 +103,7 @@ async def app_startup():
     global http_client
     global aws_access_provider
 
-    root_logger.info("Starting up..")
+    root_logger.info("Starting up version: %s", settings.VERSION)
     http_client = AsyncHttpClient()
     aws_access_provider = AwsAccessProvider(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
 

@@ -43,8 +43,15 @@ run-proxy:
 authorize-ecr:
 	aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(ECR_REPO_URI)
 
+bump-version:
+	echo '__version__ = "$(APP_VERSION)"' > $(APP_DIR)/version.py
+	git add $(APP_DIR)/version.py
+	git commit -m "Bump version to $(APP_VERSION)" || true
+
 build-docker-image:
 	docker build -f Dockerfile -t $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION) -t $(ECR_REPO_URI)/$(APP_DIR):latest .
 
-publish-docker-image: build-docker-image authorize-ecr
+publish-docker-image: bump-version build-docker-image authorize-ecr
 	docker push $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION)
+
+.NOTPARALLEL: publish-docker-image
