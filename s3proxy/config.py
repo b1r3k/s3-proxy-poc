@@ -15,6 +15,7 @@ class GlobalSettings(BaseSettings):
 
     APP_NAME: str = str(__main__.__package__)
     APP_VERSION: str = __version__
+    SENTRY_DSN: str | None = None
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
     AWS_ACCESS_KEY_ID: str | None = None

@@ -15,6 +15,7 @@ dotenv-cli = "^3.1.1"
 pydantic = {extras = ["dotenv"], version = "^2.0.1"}
 pydantic-settings = "^2.0.0"
 boto3 = "^1.28.4"
+sentry-sdk = {extras = ["starlette"], version = "^1.28.1"}
 
 [build-system]
 requires = ["poetry-core"]

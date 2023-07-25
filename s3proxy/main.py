@@ -6,6 +6,7 @@ from starlette.datastructures import URL
 from starlette.responses import Response, StreamingResponse
 from starlette.routing import Route
 
+from . import sentry  # noqa: F401
 from .aws import AwsAccessProvider
 from .awssigv4 import get_v4_signature
 from .config import settings
@@ -103,7 +104,7 @@ async def app_startup():
     global http_client
     global aws_access_provider
 
-    root_logger.info("Starting up version: %s", settings.VERSION)
+    root_logger.info("Starting up version: %s", settings.APP_VERSION)
     http_client = AsyncHttpClient()
     aws_access_provider = AwsAccessProvider(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
 
