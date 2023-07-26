@@ -51,7 +51,9 @@ bump-version:
 build-docker-image:
 	docker build -f Dockerfile -t $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION) -t $(ECR_REPO_URI)/$(APP_DIR):latest .
 
-publish-docker-image: bump-version build-docker-image authorize-ecr
+publish-docker-image: build-docker-image authorize-ecr
 	docker push $(ECR_REPO_URI)/$(APP_DIR):$(APP_VERSION)
 
-.NOTPARALLEL: publish-docker-image
+publish-new-version: bump-version publish-docker-image
+
+.NOTPARALLEL: publish-docker-image publish-new-version
